@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/game/game"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "navigationBarTitleText": "神也过不了第二关",
+    "navigationBarBackgroundColor": "#05030c",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#05030c",
+    "backgroundTextStyle": "dark",
+    "disableScroll": true
+  }
+}

@@ -1,0 +1,11 @@
+# 个人证件材料（绝对不要提交）
+证件/
+# 临时/自动化产物
+_tools/
+_cdp_profile/
+_p*.js
+_cdp.js
+*.tmp
+.DS_Store
+Thumbs.db
+node_modules/

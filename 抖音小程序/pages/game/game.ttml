@@ -1,0 +1,54 @@
+<view class="app">
+
+  <canvas
+    id="game"
+    canvas-id="game"
+    type="2d"
+    class="cv"
+    disable-scroll="true"
+    bindtouchstart="onTouchStart"
+    bindtouchmove="onTouchMove"
+    bindtouchend="onTouchEnd"
+  ></canvas>
+
+  <!-- 开始页 -->
+  <view class="screen {{phase === 'ready' ? '' : 'hide'}}">
+    <view class="title">神也过不了</view>
+    <view class="title title2">第二关</view>
+    <view class="sub">数字门 · 穿过数字门，把数字滚到最大</view>
+
+    <view class="rules">
+      <view class="rule">点屏幕 <text class="hl">左 / 中 / 右</text> 切换跑道</view>
+      <view class="rule">穿过数字门 = 执行门上的 <text class="hl">+ × − ÷</text></view>
+      <view class="rule">数字 <text class="hl">≥ 紫色 BOSS 门</text> 才能继续冲关</view>
+    </view>
+
+    <view class="btn" bindtap="onStartTap" hover-class="btn-hover">开始挑战</view>
+    <view class="best">最高纪录 数字 <text class="hl">{{bestNum}}</text></view>
+  </view>
+
+  <!-- 结算页 -->
+  <view class="screen {{phase === 'over' ? '' : 'hide'}}">
+    <view class="over-title">{{overTitle}}</view>
+    <view class="stats">
+      <view class="stat">
+        <view class="k">最大数字</view>
+        <view class="v">{{sNum}}</view>
+      </view>
+      <view class="stat">
+        <view class="k">通过关卡</view>
+        <view class="v">{{sStage}}</view>
+      </view>
+      <view class="stat">
+        <view class="k">最高纪录</view>
+        <view class="v">{{sBest}}</view>
+      </view>
+    </view>
+    <view class="btn" bindtap="onStartTap" hover-class="btn-hover">再来一次</view>
+  </view>
+
+  <view class="snd {{phase === 'play' ? '' : 'snd-dim'}}" bindtap="toggleSound">
+    {{muted ? '🔇' : '🔊'}}
+  </view>
+
+</view>
