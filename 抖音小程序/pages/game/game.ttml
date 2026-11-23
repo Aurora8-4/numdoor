@@ -17,6 +17,25 @@
     <view class="title title2">第二关</view>
     <view class="sub">数字门 · 穿过数字门，把数字滚到最大</view>
 
+    <!-- 排行榜 -->
+    <view class="rank" bindtap="onRankTap">
+      <view class="rank-head">
+        <text class="rank-title">排行榜</text>
+        <text class="rank-tip">{{rankTip}}</text>
+      </view>
+
+      <view class="rank-row" tt:for="{{rankList}}" tt:key="key">
+        <text class="rank-no {{index < 3 ? 'rank-no-top' : ''}}">{{index + 1}}</text>
+        <view class="rank-avatar">{{item.initial}}</view>
+        <text class="rank-name">{{item.name}}</text>
+        <text class="rank-num">{{item.numText}}</text>
+        <text class="rank-stage">{{item.stage}} 关</text>
+      </view>
+
+      <view class="rank-empty" tt:if="{{rankList.length === 0}}">还没有成绩，先玩一局上榜</view>
+      <view class="rank-foot" tt:if="{{rankList.length > 0}}">最高数字 · 关卡　|　好友榜需小游戏版本</view>
+    </view>
+
     <view class="rules">
       <view class="rule">点屏幕 <text class="hl">左 / 中 / 右</text> 切换跑道</view>
       <view class="rule">穿过数字门 = 执行门上的 <text class="hl">+ × − ÷</text></view>
@@ -44,6 +63,7 @@
         <view class="v">{{sBest}}</view>
       </view>
     </view>
+    <view class="over-rank" tt:if="{{rankPos}}">本次成绩 榜上第 <text class="hl">{{rankPos}}</text> 名</view>
     <view class="btn" bindtap="onStartTap" hover-class="btn-hover">再来一次</view>
   </view>
 

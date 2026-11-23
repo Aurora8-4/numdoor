@@ -177,3 +177,111 @@
 }
 
 
+
+/* ---------- 排行榜 ---------- */
+.rank {
+  margin-top: 34rpx;
+  width: 100%;
+  max-width: 620rpx;
+  padding: 22rpx 24rpx 16rpx;
+  border-radius: 22rpx;
+  background: rgba(120, 190, 255, 0.07);
+  border: 1rpx solid rgba(120, 190, 255, 0.16);
+}
+
+.rank-head {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+
+.rank-title {
+  font-size: 28rpx;
+  font-weight: 800;
+  letter-spacing: 3rpx;
+  color: #5fe3ff;
+}
+
+.rank-tip {
+  font-size: 18rpx;
+  color: #6f88a8;
+}
+
+.rank-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 12rpx 0;
+  border-top: 1rpx solid rgba(120, 190, 255, 0.08);
+}
+
+.rank-no {
+  width: 44rpx;
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #6f88a8;
+  text-align: center;
+}
+
+.rank-no-top {
+  color: #ffd83d;
+}
+
+.rank-avatar {
+  width: 44rpx;
+  height: 44rpx;
+  margin-right: 14rpx;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #45d9ff, #1358c8);
+  color: #03202e;
+  font-size: 22rpx;
+  font-weight: 800;
+  text-align: center;
+  line-height: 44rpx;
+}
+
+.rank-name {
+  flex: 1;
+  font-size: 24rpx;
+  color: #cfe3ff;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.rank-num {
+  width: 150rpx;
+  text-align: right;
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #eafcff;
+}
+
+.rank-stage {
+  width: 96rpx;
+  text-align: right;
+  font-size: 20rpx;
+  color: #8fa8cc;
+}
+
+.rank-empty {
+  padding: 26rpx 0;
+  text-align: center;
+  font-size: 22rpx;
+  color: #6f88a8;
+}
+
+.rank-foot {
+  padding-top: 10rpx;
+  text-align: right;
+  font-size: 18rpx;
+  color: #55688a;
+}
+
+.over-rank {
+  margin-top: 26rpx;
+  font-size: 24rpx;
+  color: #8fa8cc;
+}
+

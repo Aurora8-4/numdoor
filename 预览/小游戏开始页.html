@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>小游戏开始页预览</title>
+<style>
+  html,body{margin:0;background:#05030c;overflow:hidden}
+  #stage{position:relative;width:390px;height:844px}
+  canvas{display:block;width:390px;height:844px}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="main" width="780" height="1688"></canvas></div>
+<canvas id="shared" style="display:none" width="624" height="574"></canvas>
+
+<script>
+/* ---------- 迷你 CommonJS 加载器 ---------- */
+function runModule(src, sandbox) {
+  var fn = new Function('module', 'exports', 'require', 'tt', 'window', 'document', src);
+  var mod = { exports: {} };
+  fn(mod, mod.exports, sandbox.require, sandbox.tt, window, document);
+  return mod.exports;
+}
+
+const BASE = '/%E6%8A%96%E9%9F%B3%E5%B0%8F%E6%B8%B8%E6%88%8F/';  // 抖音小游戏/
+const files = {
+  'js/core.js': null, 'js/ui.js': null, 'js/rank.js': null,
+  'game.js': null, 'openDataContext/index.js': null
+};
+
+async function fetchAll() {
+  for (const k of Object.keys(files)) {
+    const res = await fetch(BASE + k);
+    files[k] = await res.text();
+  }
+}
+
+(async () => {
+  await fetchAll();
+
+  const mainCanvas = document.getElementById('main');
+  const sharedCanvas = document.getElementById('shared');
+  const odMessages = [];
+
+  /* ---------- 开放数据域沙箱 ---------- */
+  const odTt = {
+    getSharedCanvas: () => sharedCanvas,
+    createCanvas: () => sharedCanvas,
+    createImage: () => {
+      const img = new Image();
+      img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+      return img;
+    },
+    onMessage: (cb) => { window.__odMsg = cb; },
+    getOpenDataContext: () => ({ postMessage: (m) => odMessages.push(m) }),
+    getFriendCloudStorage: (o) => o.success({
+      data: [
+        { nickname: '阿伟', avatarUrl: 'a', KVDataList: [{ key: 'numdoor', value: '{"num":820000,"stage":11}' }] },
+        { nickname: '小鹏', avatarUrl: 'a', KVDataList: [{ key: 'numdoor', value: '{"num":56300,"stage":7}' }] },
+        { nickname: '我自己', avatarUrl: 'a', KVDataList: [{ key: 'numdoor', value: '{"num":9800,"stage":4}' }] },
+        { nickname: '路人甲', avatarUrl: 'a', KVDataList: [{ key: 'numdoor', value: '{"num":171,"stage":2}' }] }
+      ]
+    })
+  };
+  runModule(files['openDataContext/index.js'], { tt: odTt, require: () => ({}) });
+  setTimeout(function(){
+    document.title = JSON.stringify({ msg: !!window.__odMsg, sw: sharedCanvas.width, sh: sharedCanvas.height, msgs: odMessages.length, first: odMessages[0] && odMessages[0].type });
+  }, 1500);
+
+  /* ---------- 主域沙箱 ---------- */
+  const mods = {};
+  const req = (p) => {
+    const key = p.replace('./', '').replace('.js', '') + '.js';
+    if (key.includes('core')) return mods['core'];
+    if (key.includes('ui')) return mods['ui'];
+    if (key.includes('rank')) return mods['rank'];
+    return {};
+  };
+  const mainTt = {
+    getWindowInfo: () => ({ windowWidth: 390, windowHeight: 844, pixelRatio: 2, statusBarHeight: 47, safeArea: { top: 47 } }),
+    getSystemInfoSync: () => ({ windowWidth: 390, windowHeight: 844, pixelRatio: 2 }),
+    createCanvas: () => mainCanvas,
+    getStorageSync: () => ({ num: 9800, stage: 4 }),
+    setStorageSync: () => {},
+    vibrateShort: () => {},
+    onTouchStart: () => {}, onTouchMove: () => {}, onTouchEnd: () => {},
+    setUserCloudStorage: () => {},
+    getOpenDataContext: () => ({ canvas: sharedCanvas, postMessage: (m) => { odMessages.push(m); if (window.__odMsg) window.__odMsg(m); } })
+  };
+
+  mods['core'] = runModule(files['js/core.js'], { tt: mainTt, require: req });
+  mods['ui'] = runModule(files['js/ui.js'], { tt: mainTt, require: req });
+  mods['rank'] = runModule(files['js/rank.js'], { tt: mainTt, require: req });
+
+  /* 让主域的 rAF 只跑几帧，避免无限循环 */
+  let frames = 0;
+  const t0 = performance.now();
+  window.requestAnimationFrame = (cb) => { frames++; if (performance.now() - t0 < 4000) setTimeout(cb, 40); return 1; };
+
+  runModule(files['game.js'], { tt: mainTt, require: req });
+
+  /* 手动触发一次刷新，让开放数据域画好友榜 */
+  setTimeout(() => window.__odMsg && window.__odMsg({ type: 'refresh' }), 300);
+})();
+</script>
+</body>
+</html>

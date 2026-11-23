@@ -61,6 +61,9 @@ function rrPath(ctx, x, y, w, h, r) {
 Page({
   data: {
     phase: 'ready',
+    rankList: [],
+    rankTip: '',
+    rankPos: '',
     dbg: '',
     bestNum: '1',
     sNum: '0',
@@ -97,6 +100,7 @@ Page({
       }
     } catch (e) {}
     this.setData({ bestNum: fmt(this.best.num) });
+    this.loadRank();
 
     this.mode = 'ready';
     this.paused = false;
@@ -238,6 +242,71 @@ Page({
     this.buzz('light');
   },
 
+  /* ================= 排行榜 ================= */
+  loadRank: function (highlight) {
+    var board = [];
+    try {
+      var raw = tt.getStorageSync('numdoor.board');
+      if (typeof raw === 'string' && raw) raw = JSON.parse(raw);
+      if (Array.isArray(raw)) board = raw;
+    } catch (e) { board = []; }
+
+    board = board.filter(function (it) {
+      return it && typeof it.num === 'number' && typeof it.stage === 'number';
+    }).sort(function (a, b) {
+      if (b.num !== a.num) return b.num - a.num;
+      return b.stage - a.stage;
+    }).slice(0, 6);
+
+    var list = board.map(function (it, i) {
+      var name = (it.name || '我') + '';
+      return {
+        key: 'r' + i + '_' + it.num + '_' + it.stage,
+        name: name,
+        initial: name.slice(0, 1),
+        numText: fmt(it.num),
+        stage: it.stage,
+        num: it.num
+      };
+    });
+
+    var tip = board.length ? ('共 ' + board.length + ' 条记录') : '';
+    this.setData({ rankList: list, rankTip: tip });
+
+    if (highlight !== undefined) {
+      var pos = -1;
+      for (var k = 0; k < board.length; k++) {
+        if (board[k].id === highlight) { pos = k + 1; break; }
+      }
+      this.setData({ rankPos: pos > 0 ? String(pos) : '' });
+    }
+    return list;
+  },
+
+  saveRank: function (num, stage) {
+    var board = [];
+    try {
+      var raw = tt.getStorageSync('numdoor.board');
+      if (typeof raw === 'string' && raw) raw = JSON.parse(raw);
+      if (Array.isArray(raw)) board = raw;
+    } catch (e) { board = []; }
+
+    var id = Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+    board.push({ name: '我', num: Math.round(num), stage: stage, ts: Date.now(), id: id });
+    board.sort(function (a, b) {
+      if (b.num !== a.num) return b.num - a.num;
+      return b.stage - a.stage;
+    });
+    board = board.slice(0, 10);
+    try { tt.setStorageSync('numdoor.board', board); } catch (e) {}
+    this.loadRank(id);
+  },
+
+  onRankTap: function () {
+    try {
+      tt.showToast({ title: '好友榜需要小游戏版本，当前显示你的历史成绩', icon: 'none', duration: 2000 });
+    } catch (e) {}
+  },
   onStartTap: function () {
     if (this.mode === 'play') return;
     this.start();
@@ -397,6 +466,8 @@ Page({
     if (G.num > this.best.num) this.best.num = G.num;
     if (passed > this.best.stage) this.best.stage = passed;
     try { tt.setStorageSync('numdoor.best', { num: this.best.num, stage: this.best.stage }); } catch (e) {}
+
+    this.saveRank(G.maxNum, passed);
 
     var self = this;
     this.setData({

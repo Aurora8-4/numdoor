@@ -41,6 +41,26 @@
     box-shadow:0 8px 30px rgba(50,200,255,.42),inset 0 1px 0 rgba(255,255,255,.7);
     transition:transform .12s ease,box-shadow .12s ease}
   .btn:active{transform:scale(.96);box-shadow:0 4px 16px rgba(50,200,255,.35)}
+
+  /* ---------- 排行榜 ---------- */
+  .rank{margin:4px 0 2px;width:100%;max-width:360px;padding:11px 12px 8px;border-radius:12px;
+    background:rgba(120,190,255,.07);border:1px solid rgba(120,190,255,.16)}
+  .rank-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+  .rank-title{font-size:14px;font-weight:800;letter-spacing:.08em;color:#5fe3ff}
+  .rank-tip{font-size:10px;color:#6f88a8}
+  .rank-row{display:flex;align-items:center;gap:7px;padding:6px 0;
+    border-top:1px solid rgba(120,190,255,.08)}
+  .rank-no{width:22px;font-size:12px;font-weight:800;color:#6f88a8;text-align:center}
+  .rank-no.top{color:#ffd83d}
+  .rank-avatar{width:22px;height:22px;border-radius:50%;flex:none;
+    background:linear-gradient(180deg,#45d9ff,#1358c8);color:#03202e;
+    font-size:11px;font-weight:800;display:grid;place-items:center}
+  .rank-name{flex:1;font-size:12px;color:#cfe3ff;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .rank-num{font-size:13px;font-weight:800;color:#eafcff}
+  .rank-stage{width:44px;text-align:right;font-size:10px;color:#8fa8cc}
+  .rank-empty{padding:16px 0;text-align:center;font-size:11px;color:#6f88a8}
+  .rank-foot{padding-top:6px;text-align:right;font-size:9px;color:#55688a}
+  .over-rank{margin-top:8px;font-size:12px;color:#8fa8cc}
   .best{margin-top:4px;font-size:13px;color:#7f96b8;letter-spacing:.08em}
   .best span{color:#ffd83d;font-weight:800}
   .stats{display:flex;gap:10px;width:100%;max-width:360px}
@@ -64,6 +84,16 @@
   <div class="screen" id="startScreen">
     <h1>神也过不了<br>第二关</h1>
     <p class="sub">数字门 · 穿过数字门，把数字滚到最大</p>
+
+    <div class="rank" id="rankPanel">
+      <div class="rank-head">
+        <span class="rank-title">排行榜</span>
+        <span class="rank-tip" id="rankTip"></span>
+      </div>
+      <div class="rank-list" id="rankList"></div>
+      <div class="rank-foot" id="rankFoot">最高数字 · 关卡</div>
+    </div>
+
     <ul class="rules">
       <li><b>← →</b> / <b>A D</b> / 点屏幕左中右 切换跑道</li>
       <li>穿过门 = 数字执行门上的运算 <b>+ × − ÷</b></li>
@@ -80,6 +110,7 @@
       <div><span>通过关卡</span><b id="sStage">0</b></div>
       <div><span>最高纪录</span><b id="sBest">0</b></div>
     </div>
+    <div class="over-rank" id="overRank"></div>
     <button class="btn" id="btnRetry">再来一次</button>
   </div>
 </div>
@@ -383,6 +414,77 @@ function bossFail(gate){
   gameOver();
 }
 
+/* ========================= 排行榜（本地） ========================= */
+var rankListEl = document.getElementById('rankList');
+var rankTipEl = document.getElementById('rankTip');
+var overRankEl = document.getElementById('overRank');
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
+  });
+}
+
+function readBoard(){
+  try {
+    var raw = localStorage.getItem('numdoor.board');
+    if (!raw) return [];
+    var arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    return arr.filter(function(it){ return it && typeof it.num === 'number' && typeof it.stage === 'number'; });
+  } catch (e) { return []; }
+}
+
+function sortBoard(arr){
+  return arr.sort(function(a, b){
+    if (b.num !== a.num) return b.num - a.num;
+    return b.stage - a.stage;
+  });
+}
+
+function renderBoard(highlightId){
+  if (!rankListEl) return 0;
+  var all = sortBoard(readBoard());
+  var board = all.slice(0, 5);
+
+  if (!board.length){
+    rankListEl.innerHTML = '<div class="rank-empty">还没有成绩，先玩一局上榜</div>';
+    if (rankTipEl) rankTipEl.textContent = '';
+    return 0;
+  }
+
+  var html = '';
+  for (var i = 0; i < board.length; i++){
+    var it = board[i];
+    var name = (it.name || '我') + '';
+    html += '<div class="rank-row">' +
+      '<span class="rank-no' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</span>' +
+      '<span class="rank-avatar">' + escapeHtml(name.slice(0, 1)) + '</span>' +
+      '<span class="rank-name">' + escapeHtml(name) + '</span>' +
+      '<span class="rank-num">' + fmt(it.num) + '</span>' +
+      '<span class="rank-stage">' + (it.stage | 0) + ' 关</span>' +
+      '</div>';
+  }
+  rankListEl.innerHTML = html;
+  if (rankTipEl) rankTipEl.textContent = '共 ' + all.length + ' 条记录';
+
+  var pos = 0;
+  if (highlightId){
+    for (var k = 0; k < board.length; k++){
+      if (board[k].id === highlightId){ pos = k + 1; break; }
+    }
+  }
+  return pos;
+}
+
+function saveBoard(num, stage){
+  var board = readBoard();
+  var id = Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  board.push({ name: '我', num: Math.round(num), stage: stage | 0, ts: Date.now(), id: id });
+  board = sortBoard(board).slice(0, 10);
+  try { localStorage.setItem('numdoor.board', JSON.stringify(board)); } catch (e) {}
+  return renderBoard(id);
+}
 function gameOver(){
   if (mode === 'over') return;
   mode = 'over';
@@ -391,6 +493,8 @@ function gameOver(){
   if (G.num > best.num) best.num = G.num;
   if (passed > best.stage) best.stage = passed;
   try { localStorage.setItem('numdoor.best', JSON.stringify(best)); } catch (e) {}
+  var rankPos = saveBoard(G.maxNum, passed);
+  if (overRankEl) overRankEl.textContent = rankPos ? ('本次成绩 榜上第 ' + rankPos + ' 名') : '';
   sNum.textContent = fmt(G.maxNum);
   sStage.textContent = passed;
   sBest.textContent = fmt(best.num);
@@ -974,6 +1078,7 @@ function frame(now){
 layout();
 newGame();
 bestStart.textContent = fmt(best.num);
+renderBoard();
 window.addEventListener('resize', layout);
 window.addEventListener('orientationchange', function(){ setTimeout(layout, 220); });
 requestAnimationFrame(frame);
